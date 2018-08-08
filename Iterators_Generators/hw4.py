@@ -9,7 +9,7 @@ def infix_to_postfix(expr):
 
     stack = []
     postfix_list = []
-    tokens = expr.split() if ' ' in expr else expr
+    tokens = expr.replace(' ', '')
 
     try:
         for tkn in tokens:
@@ -47,9 +47,9 @@ def postfix_to_infix(postfix_list):
                 operand1 = stack.pop()
 
                 # check PRIORITY
-                if is_operand_priority_lower(operand1, tkn):
+                if is_operand_priority_lower(operand1, tkn, 1):
                     operand1 = '( {} )'.format(operand1)
-                if is_operand_priority_lower(operand2, tkn):
+                if is_operand_priority_lower(operand2, tkn, 2):
                     operand2 = '( {} )'.format(operand2)
 
                 stack.append('{} {} {}'.format(operand1, tkn, operand2))
@@ -60,15 +60,31 @@ def postfix_to_infix(postfix_list):
         return 'Check the correctness of the input expression.'
 
 
-def is_operand_priority_lower(operand, operator):
-    for i, tkn in enumerate(operand):
-        if tkn in PRIORITY.keys() and tkn != '(' and PRIORITY[tkn] < PRIORITY[operator]:
-            return True
+def is_operand_priority_lower(operand, operator, operand_num):
+    i = 0
+    while i < len(operand):
+        if operand[i] == '(':
+            while operand[i] != ')':
+                i += 1
+
+        if operand[i] in PRIORITY.keys():
+            if PRIORITY[operand[i]] < PRIORITY[operator]:
+                return True
+
+            elif operand_num == 2 and PRIORITY[operand[i]] == PRIORITY[operator]:
+                # case of - (-) or - (+). E.g. a-(b-c) or a-(b+c)
+                if operator == '-' and (operand[i] == '-' or operand[i] == '+'):
+                    return True
+                # case of / (*). E.g. a/(b*c)
+                elif operator == '/' and operand[i] == '*':
+                    return True
+        i += 1
+
     return False
 
 
 if __name__ == '__main__':
-    print(brackets_trim("(a*(b/c)+((d-f)/k))"))
+    print(brackets_trim("a-(b+c)"))
 
 
 
