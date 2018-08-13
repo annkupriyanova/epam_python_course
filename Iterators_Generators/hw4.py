@@ -84,7 +84,7 @@ def is_operand_priority_lower(operand, operator, operand_num):
 
 
 if __name__ == '__main__':
-    print(brackets_trim("a-(b+c)"))
+    print(brackets_trim("(x*y)+(j*z)+g"))
 
 
 
