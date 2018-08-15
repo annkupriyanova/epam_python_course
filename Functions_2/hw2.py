@@ -1,3 +1,6 @@
+from math import sqrt
+
+
 def sqrt_newton(n, eps=1e-15):
     def sqrt_helper(x=1):
         new_x = (x + n / x) / 2
@@ -7,8 +10,9 @@ def sqrt_newton(n, eps=1e-15):
         else:
             return sqrt_helper(new_x)
 
-    return round(sqrt_helper(), 2)
+    return sqrt_helper()
 
 
 if __name__ == '__main__':
-    print(sqrt_newton(9.5))
+    print(sqrt_newton(4))
+    print(sqrt(4))

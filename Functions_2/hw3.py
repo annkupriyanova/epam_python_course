@@ -7,19 +7,16 @@ def count_points(a, b, c):
     y_max = max(y_coord)
     y_min = min(y_coord)
 
-    sign = lambda x: 1 if x >= 0 else 0
-
     def count_points_helper(x, y, count=0):
         if y > y_max:
             return count_points_helper(x+1, y_min, count)
         if x > x_max:
             return count
 
-        sign1 = sign((a[0] - x) * (b[1] - a[1]) - (b[0] - a[0]) * (a[1] - y))
-        sign2 = sign((b[0] - x) * (c[1] - b[1]) - (c[0] - b[0]) * (b[1] - y))
-        sign3 = sign((c[0] - x) * (a[1] - c[1]) - (a[0] - c[0]) * (c[1] - y))
+        summa = square(x, y, a[0], a[1], b[0], b[1]) + square(x, y, b[0], b[1], c[0], c[1]) \
+            + square(x, y, c[0], c[1], a[0], a[1])
 
-        if sign1 == sign2 == sign3:
+        if summa == square(a[0], a[1], b[0], b[1], c[0], c[1]):
             count += 1
 
         return count_points_helper(x, y+1, count)
@@ -27,5 +24,11 @@ def count_points(a, b, c):
     return count_points_helper(x_min, y_min)
 
 
+def square(ax, ay, bx, by, cx, cy):
+    return abs(bx*cy - cx*by - ax*cy + cx*ay + ax*by - bx*ay)
+
+
 if __name__ == '__main__':
-    print(count_points((0,0),(2,0),(0,2)))
+    print(count_points((-2, -5), (0, 0), (5, 2)))
+    print(count_points((5, 2), (0, 0), (-2, -5)))
+    print(count_points((5, 2), (-2, -5), (0, 0)))
