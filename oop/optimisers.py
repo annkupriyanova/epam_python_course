@@ -1,13 +1,13 @@
 class AbstractOptimiser:
    def process(self, graph):
-        self.pre_process(graph)
+        g = self.pre_process(graph)
 
-        result = self.process_internal(graph)
+        result = self.process_internal(g)
 
         return self.post_process(result)
    
    def pre_process(self, graph):
-       pass
+       return graph
    
    def process_internal(self, graph):
        return graph

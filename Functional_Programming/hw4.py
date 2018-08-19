@@ -17,7 +17,7 @@ def problem48():
 
 
 def problem40():
-    fraction = list(reduce(lambda x,y: x+str(y), range(1, 200000), ''))
+    fraction = "".join(str(i) for i in range(1, 1000000))
     return reduce(mul, (int(fraction[10**i - 1]) for i in range(7)))
 
 

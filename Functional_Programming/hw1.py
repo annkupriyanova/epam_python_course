@@ -9,7 +9,7 @@ def hw1():
     print(summa2)
 
     lst = range(10**3)
-    summa3 = reduce((lambda x,y: x**2 + y**2), lst)
+    summa3 = reduce((lambda x,y: x + y*y), lst)
     print(summa3)
 
 

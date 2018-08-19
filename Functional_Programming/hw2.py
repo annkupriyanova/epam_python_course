@@ -6,9 +6,9 @@ def is_armstrong(number):
     digits = list(map(lambda x: int(x)**len(num_str), num_str))
 
     if number == reduce(lambda x, y: x + y, digits):
-        return 'Число Армстронга'
+        return True
     else:
-        return 'Не число Армстронга'
+        return False
 
 
 if __name__ == '__main__':
