@@ -1,4 +1,6 @@
-PRIORITY = {"*": 3, "/": 3, "+": 2, "-": 2, "(": 1, "^": 0, "±": -1}
+from oop.utils import PRIORITY
+from oop.utils import build_graph
+from oop.optimisers import DoubleNegativeOptimiser, IntegerCostantsOptimiser, SimplifierOptimiser
 
 
 class Calculator:
@@ -6,14 +8,14 @@ class Calculator:
         self.opcodes = opcodes
         self.operators = operators if operators is not None else []
         self.postfix_form = self._infix_to_postfix(opcodes)
-        self.graph = self._build_graph()
+        self.graph = build_graph(self.postfix_form)
 
     def __str__(self) -> str:
         return ''.join(self.postfix_form).replace('±', '-')
 
     def optimise(self):
         for operator in self.operators:
-            self.opcodes = operator.process(self.opcodes)
+            self.postfix_form = operator.process(self.postfix_form)
 
     def validate(self) -> bool:
         if self._brackets_balance(self.opcodes) and self._forbidden_operations(self.postfix_form) and self.graph:
@@ -62,6 +64,8 @@ class Calculator:
                     while top_tkn != '(':
                         postfix_list.append(top_tkn)
                         top_tkn = stack.pop()
+                    if len(stack) and stack[-1] == '±':
+                        postfix_list.append(stack.pop())
                 elif tkn in PRIORITY.keys():
                     # case of unary minus
                     if tkn == '-' and (len(postfix_list) == 0 or unary_flag):
@@ -77,68 +81,6 @@ class Calculator:
             postfix_list.append(stack.pop())
 
         return postfix_list
-
-    def _build_graph(self):
-        reversed_postfix = self.postfix_form[::-1]
-
-        graph = Tree(Node(reversed_postfix[0]))
-
-        def fillin_subtree(root, tok_index=1):
-            tok = reversed_postfix[tok_index]
-
-            if not root.right:
-                root.right = Node(tok)
-                if tok in PRIORITY:
-                    tok_index = fillin_subtree(root.right, tok_index + 1)
-
-            if not root.left:
-                tok_index += 1
-                tok = reversed_postfix[tok_index]
-                root.left = Node(tok)
-                if tok in PRIORITY:
-                    fillin_subtree(root.left, tok_index + 1)
-
-            # print(root.value, root.right.value, root.left.value)
-
-            return tok_index
-
-        try:
-            fillin_subtree(graph.root)
-        except IndexError:
-            return False
-
-        return graph
-
-
-class Tree:
-    def __init__(self, root=None):
-        self.root = root
-
-    def __str__(self):
-        return self._traverse(self.root)
-
-    def _traverse(self, root, acc=''):
-        if root.left:
-            if root.left.value in PRIORITY:
-                acc = self._traverse(root.left, acc)
-            else:
-                acc += root.left.value
-
-        acc += root.value
-
-        if root.right:
-            if root.right.value in PRIORITY:
-                acc = self._traverse(root.right, acc)
-            else:
-                acc += root.right.value
-        return acc
-
-
-class Node:
-    def __init__(self, val, left=None,right=None):
-        self.value = val
-        self.left = left
-        self.right = right
 
 
 def test():
@@ -185,10 +127,63 @@ def test1():
 
 
 def test2():
-    expr = "-(-1)"
-    calc = Calculator(expr)
-    print(calc.graph)
+    double_negate_tests = [
+        ('-(-a)', 'a'),
+        ('-(-5)', '5'),
+        ('-(a+b)+c-(-d)', 'ab+-c+d+'),
+    ]
+
+    for case, exp in double_negate_tests:
+        tokens = list(case)
+        calc = Calculator(tokens, [DoubleNegativeOptimiser()])
+        calc.optimise()
+
+        if str(calc) != exp:
+            print(f'Error in case for "{case}". Actual "{calc}", expected {exp}')
+
+
+def test3():
+    integer_constant_optimiser_tests = [
+        (['1'], ['1']),
+        (['1', '+', '2'], ['3']),
+        (['1', '-', '2'], ['1-']),
+        (['2', '*', '2'], ['4']),
+        (['2', '/', '2'], ['1.0']),
+        (['2', '^', '10'], ['1024']),
+        (['a', '+', '2', '*', '4'], ['a8+', '8a+']),
+    ]
+
+    for case, exp in integer_constant_optimiser_tests:
+        calc = Calculator(case, [DoubleNegativeOptimiser(), IntegerCostantsOptimiser()])
+
+        calc.optimise()
+
+        if str(calc) not in exp:
+            print(f'Error in case for "{case}". Actual "{calc}", expected one of {exp}')
+
+
+def test4():
+    simplifier_optimiser_test = [
+        ('a+0', ['a']),
+        ('a*1', ['a']),
+        ('a*0', ['0']),
+        ('b/b', ['1']),
+        ('a-a', ['0']),
+        ('a+(b-b)', ['a']),
+        ('a+(7-6-1)', ['a']),
+        ('a^0', ['1']),
+        ('a-(-(-a))', ['0']),
+    ]
+
+    for case, exps in simplifier_optimiser_test:
+        tokens = list(case)
+        calc = Calculator(tokens, [DoubleNegativeOptimiser(), IntegerCostantsOptimiser(), SimplifierOptimiser()])
+
+        calc.optimise()
+
+        if str(calc) not in exps:
+            print(f'Error in case for "{case}". Actual "{calc}", expected one of {exps}')
 
 
 if __name__ == '__main__':
-    test1()
+    test()
