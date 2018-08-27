@@ -1,41 +1,61 @@
 
 class EnumMeta(type):
-    def __new__(cls, *args, **kwargs):
-        # reversed_enum_pairs = {}
-        storage = {key: value for key, value in args[2].items() if not key.startswith('__')}
+    def __new__(cls, name, bases, dct):
+        storage = {}
+        reversed_storage = {}
+        enum_list = []
 
-        enum_cls = super().__new__(cls, *args, **kwargs)
-        enum_cls.storage = storage
-        enum_cls.dict_of_instances = {key: enum_cls(value) for key, value in storage.items()}
+        for key, value in dct.items():
+            if not key.startswith('__'):
+                storage[key] = value
+                reversed_storage[value] = key
+
+        dct['storage'] = storage
+        dct['reversed_storage'] = reversed_storage
+
+        enum_cls = super().__new__(cls, name, bases, dct)
+
+        for key, value in dct['storage'].items():
+            enum_instance = enum_cls(value)
+            enum_list.append(enum_instance)
+            setattr(enum_cls, key, enum_instance)
+
+        setattr(enum_cls, '_enum_list', tuple(enum_list))
 
         return enum_cls
 
+    def __iter__(self):
+        return iter(self._enum_list)
+
+    def __getitem__(self, key):
+        if key in self.__dict__:
+            return self.__dict__[key]
+        else:
+            raise KeyError(f'{key}')
+
 
 class Enum(metaclass=EnumMeta):
-    def __new__(cls, *args, **kwargs):
-        # print(cls.__dict__)
-        if args[0] not in cls.storage.values():
-            print(f'ValueError: {args[0]} is not a valid parameter')
+    def __new__(cls, value):
+        if value not in cls.reversed_storage:
+            raise ValueError(f'{value} is not a valid {cls.__name__}')
         else:
-            key = next(k for k, v in cls.storage.items() if v == args[0])
-            if key in cls.dict_of_instances:
-                return cls.dict_of_instances[key]
-            else:
-                new_instance = super().__new__(cls)
-                # new_instance.__class__ = Enum
-                new_instance.name = key
-                new_instance.value = cls.storage[key]
+            key = cls.reversed_storage[value]
+            for enum_instance in cls._enum_list:
+                if value == enum_instance.value:
+                    return enum_instance
 
-                return new_instance
+        new_instance = super().__new__(cls)
+        new_instance.__class__ = cls
+        new_instance.name = key
+        new_instance.value = cls.storage[key]
+
+        return new_instance
 
     def __str__(self):
-        pass
+        return f'{type(self).__name__}.{self.name}'
 
-    def __getitem__(self, item):
-        if item in self.dict_of_instances:
-            return self.dict_of_instances[item]
-        else:
-            raise KeyError
+    def __repr__(self):
+        return f'<{type(self).__name__}.{self.name}: {self.value}>'
 
 
 class Direction(Enum):
@@ -45,15 +65,10 @@ class Direction(Enum):
     west = 270
 
 
-def test():
-    print(Direction.west)
-    Direction(90)
-    print(Direction.east)
-    print(Direction.dict_of_instances['north'].name)
-    print(Direction.dict_of_instances['north'].value)
-
-    print(Direction['west'])
-
-
-if __name__ == '__main__':
-    test()
+# def test():
+#     for d in Direction:
+#         print(d)
+#
+#
+# if __name__ == '__main__':
+#     test()
