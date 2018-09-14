@@ -1,5 +1,5 @@
 class EnsurePositive:
-    def __init__(self, var_name, init_value=0):
+    def __init__(self, var_name):
         self.name = var_name
 
     def __get__(self, instance, owner):

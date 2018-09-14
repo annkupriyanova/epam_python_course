@@ -28,7 +28,7 @@ class EnumMeta(type):
         return iter(self._enum_list)
 
     def __getitem__(self, key):
-        if key in self.__dict__:
+        if key in self.__dict__['storage']:
             return self.__dict__[key]
         else:
             raise KeyError(f'{key}')
@@ -65,10 +65,11 @@ class Direction(Enum):
     west = 270
 
 
-# def test():
-#     for d in Direction:
-#         print(d)
-#
-#
-# if __name__ == '__main__':
-#     test()
+def test():
+    for d in Direction:
+        print(d)
+    Direction['north-west']
+
+
+if __name__ == '__main__':
+    test()
