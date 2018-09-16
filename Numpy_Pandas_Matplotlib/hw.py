@@ -38,9 +38,9 @@ def estimate_complexity():
 
 def draw_plots(df):
     # First subplot log T(log N)
-    x = np.log(df['Size'][2:])
-    y = np.log(df['Time'][2:])
-    z = np.polyfit(x, y, 6)
+    x = np.log(df['Size'][1:])
+    y = np.log(df['Time'][1:])
+    z = np.polyfit(x, y, 8)
     f = np.poly1d(z)
     y_new = f(x)
 
