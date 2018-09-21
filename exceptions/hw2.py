@@ -1,12 +1,17 @@
 import os
+import sys
+import fcntl
+import time
 
 
 class pidfile:
     def __init__(self, file_name):
-        if 'file' in self.__dict__ and not self.file.closed:
-            raise Exception
-        else:
-            self.file = open(file_name, 'w')
+        self.file = open(file_name, 'w+')
+        try:
+            fcntl.flock(self.file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError:
+            print('More than one program is forbidden!')
+            sys.exit(1)
 
     def __enter__(self):
         self.file.write(str(os.getpid()))
